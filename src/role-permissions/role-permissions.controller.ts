@@ -5,32 +5,6 @@
 
 // @Controller('role-permissions')
 // export class RolePermissionsController {
-//   constructor(private readonly rolePermissionsService: RolePermissionsService) {}
-
-//   @Post()
-//   create(@Body() createRolePermissionDto: CreateRolePermissionDto) {
-//     return this.rolePermissionsService.create(createRolePermissionDto);
-//   }
-
-//   @Get()
-//   findAll() {
-//     return this.rolePermissionsService.findAll();
-//   }
-
-//   @Get(':id')
-//   findOne(@Param('id') id: string) {
-//     return this.rolePermissionsService.findOne(+id);
-//   }
-
-//   @Patch(':id')
-//   update(@Param('id') id: string, @Body() updateRolePermissionDto: UpdateRolePermissionDto) {
-//     return this.rolePermissionsService.update(+id, updateRolePermissionDto);
-//   }
-
-//   @Delete(':id')
-//   remove(@Param('id') id: string) {
-//     return this.rolePermissionsService.remove(+id);
-//   }
 // }
 
 import {
@@ -44,19 +18,20 @@ import {
   NotFoundException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { RolePermissionsService } from './role-permissions.service';
+import { RolesAndPermissionsService } from './role-permissions.service';
 import { CreateRolePermissionDto } from './dto/create-role-permission.dto';
 import { UpdateRolePermissionDto } from './dto/update-role-permission.dto';
 import { PermissionsGuard } from '../auth/permissions.guard';
-import { RolesAndPermissionsPermissionsKeys } from '../auth/permissions-keys';
-import { ValidatePermissionRolesPipe } from './pipes/validate-permission-roles.pipe';
-import { PermissionRoleEntity } from './entities/permission-role.entity';
+import { RolesAndPermissionsPermissionsKeys } from '../role-permissions/roles-permissions-config.service';
+import { ValidatePermissionRolesPipe } from '../pipes/validate-permission-roles.pipe';
+import { RolePermission } from './entities/role-permission.entity';
 import { User } from '../user/entities/user.entity';
+import { PermissionRoleService } from 'src/permission/permission-role.service';
 
 @Controller('role-permissions')
 export class RolePermissionsController {
   constructor(
-    private readonly rolePermissionsService: RolePermissionsService,
+    private readonly rolePermissionsService: PermissionRoleService,
     private readonly rolesAndPermissionsService: RolesAndPermissionsService,
   ) {}
 
@@ -74,7 +49,7 @@ export class RolePermissionsController {
 
   @Post()
   @UseGuards(PermissionsGuard(() => RolesAndPermissionsPermissionsKeys.ManagePermissions))
-  async setRoleAndPermissions(@Body(ValidatePermissionRolesPipe) prs: PermissionRoleEntity[]) {
+  async setRoleAndPermissions(@Body(ValidatePermissionRolesPipe) prs: RolePermission[]) {
     for (const pr of prs) {
       const isDef = await this.checkIfIsDefault(pr.id);
       if (!isDef) {

@@ -5,27 +5,41 @@ import { Role } from '../../role/entities/role.entity';
 @Entity()
 @Unique(['permission', 'role'])
 export class RolePermission  {
-
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('boolean', { default: false })
+  @Column('boolean', { default: false})
   isEnabled: boolean;
 
-  @Column('boolean', { default: false })
+  @Column('boolean', { default: false})
   isDefault: boolean;
 
-  @ManyToOne(() => Permission, { onDelete: 'CASCADE' })
+  @ManyToOne(
+    type => Permission,
+    permission => permission.permissionRoles,
+    { onDelete: 'CASCADE' },
+  )
   @JoinColumn()
   permission: Permission;
 
-  @ManyToOne(() => Role, { onDelete: 'CASCADE' })
+  @Column()
+  permissionId: number;
+
+  @ManyToOne(
+    type => Role,
+    role => role.permissionRoles,
+    { onDelete: 'CASCADE' },
+  )
   @JoinColumn()
   role: Role;
 
-  constructor(data?: Partial<RolePermission>) {
+  @Column()
+  roleId: number;
+
+  constructor(data?: Partial<RolePermission >) {
     if (data) {
       Object.assign(this, data);
     }
   }
+
 }

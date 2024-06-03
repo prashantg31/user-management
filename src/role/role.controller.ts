@@ -1,7 +1,3 @@
-// import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-// import { RoleService } from './role.service';
-// import { CreateRoleDto } from './dto/create-role.dto';
-// import { UpdateRoleDto } from './dto/update-role.dto';
 import {
   Body,
   Controller, Delete,
@@ -25,10 +21,11 @@ import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { PermissionsGuard } from '../auth/permissions.guard';
-import { RolesAndPermissionsPermissionsKeys } from '../auth/permissions-keys';
+import { RolesAndPermissionsPermissionsKeys } from '../role-permissions/roles-permissions-config.service';
 import { ForbidDefaultRoleActionGuard } from '../auth/forbid-default-role-action.guard';
-import { ValidateRolePipe } from './pipes/validate-role.pipe';
+import { ValidateRolePipe } from '../pipes/validate-role.pipe';
 import { Role } from './entities/role.entity';
+import { RolesAndPermissionsService } from 'src/role-permissions/role-permissions.service';
 
 @Controller('role')
 export class RoleController {

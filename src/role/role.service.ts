@@ -15,80 +15,70 @@ export class RoleService {
 
   constructor(
     @InjectRepository(Role)
-    private readonly roleRepository: Repository<Role>,
-  ) {}
+    private readonly rolesRepository: Repository<Role>,
+  ) { }
 
-  // async createRole(name: string): Promise<Role> {
-  //   const role = new Role();
-  //   role.name = name;
-  //   return this.registerRole(role);
-  // }
-
-  async findAll(excludeSystem = true): Promise<Role[]> {
+  getAll(excludeSystem = true) {
     const conditions: any = {};
     if (excludeSystem) {
       conditions.isSystem = false;
     }
-    return this.roleRepository.find(conditions);
+    return this.rolesRepository.find(conditions);
   }
 
-  async findOneByName(name: string): Promise<Role> {
-    return this.roleRepository.findOneOrFail({ where: { name } });
+  getRole(conditions?) {
+    return this.rolesRepository.findOne(conditions);
   }
 
-  async getRole(conditions?: any): Promise<Role> {
-    return this.roleRepository.findOne(conditions);
-  }
-
-  async getRoles(conditions?: any, excludeSystem = true): Promise<Role[]> {
+  getRoles(conditions?, excludeSystem = true) {
     conditions = conditions || {};
     if (excludeSystem) {
       conditions.isSystem = false;
     }
-    return this.roleRepository.find(conditions);
+    return this.rolesRepository.find(conditions);
   }
 
-  async updateRole(role: Role): Promise<Role> {
-    return this.roleRepository.save(role);
+  async updateRole(role: Role) {
+    return this.rolesRepository.save(role);
   }
 
-  async registerRole(role: Role): Promise<{ isNew: boolean; role: Role }> {
-    let isNew = true;
-    const existedRole = await this.roleRepository.findOne({ where: { name: role.name } });
+  async registerRole(role: Role) {
+
+    const existedRole = await this.rolesRepository
+      .findOne({
+        where: {
+          name: role.name,
+        }
+      });
+
+    const isNew = !!existedRole;
 
     if (existedRole) {
       role = existedRole;
-      isNew = false;
     } else {
-      role = await this.roleRepository.save(role);
+      role = await this.rolesRepository.save(role);
     }
 
     if (isNew) {
       this.$$roleRegistered.next(role);
     }
-
     return { isNew, role };
+
+    // let isNew = true;
+    // try {
+    //   role = await this.rolesRepository.save(role);
+    // } catch {
+    //   isNew = false;
+    //   role = await this.rolesRepository.findOne({name: role.name});
+    // }
+    // if (isNew) {
+    //   this.$$roleRegistered.next(role);
+    // }
+    // return { isNew, role };
   }
 
-  async removeRole(roleId: number): Promise<Role> {
+  async removeRole(roleId) {
     const role = await this.getRole({ id: roleId });
-    return this.roleRepository.remove(role);
-  }
-
-  async update(id: number, updateRoleDto: UpdateRoleDto): Promise<Role> {
-    const role = await this.roleRepository.findOne({where:{id}});
-    if (!role) {
-      throw new NotFoundException(`Role with id ${id} not found`);
-    }
-    Object.assign(role, updateRoleDto);
-    return this.updateRole(role);
-  }
-
-  async remove(id: number): Promise<void> {
-    const role = await this.roleRepository.findOne({where:{id}});
-    if (!role) {
-      throw new NotFoundException(`Role with id ${id} not found`);
-    }
-    await this.roleRepository.remove(role);
+    return await this.rolesRepository.remove(role);
   }
 }

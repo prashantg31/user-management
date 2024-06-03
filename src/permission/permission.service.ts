@@ -1,50 +1,59 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Permission } from './entities/permission.entity';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Permission } from './entities/permission.entity';
-import { Repository } from 'typeorm';
+import { Subject } from 'rxjs';
 
 @Injectable()
 export class PermissionService {
+  private $$permissionRegistered = new Subject<Permission>();
+  public $permissionRegistered = this.$$permissionRegistered.asObservable();
 
   constructor(
     @InjectRepository(Permission)
     private readonly permissionRepository: Repository<Permission>,
   ) {}
 
-  async createPermission(name: string): Promise<Permission> {
-    const permission = new Permission();
-    permission.name = name;
-    return this.permissionRepository.save(permission);
-  }
-
-  async findAll(): Promise<Permission[]> {
+  async getAll(): Promise<Permission[]> {
     return this.permissionRepository.find();
   }
 
-  async findOneByName(name: string): Promise<Permission> {
-    return this.permissionRepository.findOne({ where: { name } });
+  async getRolesAssoc(): Promise<Permission[]> {
+    return this.permissionRepository.find({
+      relations: ['roles'],
+      order: {
+        group: 'ASC',
+        description: 'ASC',
+      },
+    });
   }
 
-  
-  create(createPermissionDto: CreatePermissionDto) {
-    return 'This action adds a new permission';
+  async registerPermission(permission: Permission): Promise<{ isNew: boolean; permission: Permission }> {
+    let isNew = true;
+    try {
+      permission = await this.permissionRepository.save(permission);
+    } catch {
+      isNew = false;
+      permission = await this.permissionRepository.findOne({ where: { key: permission.key } });
+    }
+
+    if (!permission) {
+      throw new Error('Permission not found');
+    }
+
+    if (isNew) {
+      this.$$permissionRegistered.next(permission);
+    }
+    return { isNew, permission };
   }
 
-  // findAll() {
-  //   return `This action returns all permission`;
-  // }
-
-  findOne(id: number) {
-    return `This action returns a #${id} permission`;
-  }
-
-  update(id: number, updatePermissionDto: UpdatePermissionDto) {
-    return `This action updates a #${id} permission`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} permission`;
+  async getPermission(conditions?: Partial<Permission>): Promise<Permission> {
+    return this.permissionRepository.findOne({
+      where: conditions,
+    }
+    );
   }
 }
+
